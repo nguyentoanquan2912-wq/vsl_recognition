@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}VN Check - Huan luyen{% endblock %}
+
+{% block extra_css %}
+.algo-card { display:flex; align-items:center; gap:0.7rem; padding:0.7rem; border-radius:8px; border:1px solid var(--border); cursor:pointer; transition:all 0.25s; margin-bottom:0.4rem; }
+.algo-card:hover { border-color:var(--border-h); background:rgba(255,107,107,0.02); }
+.algo-card.sel { border-color:var(--p); background:var(--p-glow); }
+.algo-ic { width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem; flex-shrink:0; }
+.algo-nm { font-weight:600; font-size:0.85rem; }
+.algo-sub { font-size:0.7rem; color:var(--text-2); }
+.algo-badge { padding:0.12rem 0.4rem; border-radius:999px; font-size:0.6rem; font-weight:600; }
+
+.p-steps { display:flex; justify-content:space-between; margin-bottom:1rem; position:relative; }
+.p-steps::before { content:''; position:absolute; top:14px; left:10%; width:80%; height:1px; background:var(--border); }
+.p-step { text-align:center; position:relative; z-index:1; flex:1; }
+.p-dot { width:28px; height:28px; border-radius:50%; background:var(--bg-2); border:2px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; margin-bottom:0.3rem; transition:all 0.3s; }
+.p-step.active .p-dot { border-color:var(--p); background:var(--p-glow); color:var(--p); box-shadow:0 0 10px var(--p-glow-s); }
+.p-step.done .p-dot { border-color:var(--success); background:var(--success); color:#000; }
+.p-step-lbl { font-size:0.6rem; color:var(--text-3); }
+.p-step.active .p-step-lbl { color:var(--p); }
+.p-step.done .p-step-lbl { color:var(--success); }
+
+.res-box { background:rgba(0,0,0,0.2); padding:0.85rem; border-radius:10px; text-align:center; border:1px solid var(--border); transition:all 0.3s; }
+.res-box:hover { border-color:var(--border-h); transform:translateY(-2px); }
+.res-box .stat-val { font-size:1.6rem; }
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-2">
+    <div>
+        <div class="card glass mb-2">
+            <h2>Du lieu Huan luyen</h2>
+            <div class="grid grid-4 text-center mt-2">
+                <div><div class="stat-val" id="train-samples" style="font-size:1.6rem;">0</div><div class="stat-lbl">Tong mau</div></div>
+                <div><div class="stat-val" id="train-classes" style="font-size:1.6rem;">0</div><div class="stat-lbl">So lop</div></div>
+                <div><div class="stat-val" style="font-size:1.6rem;color:var(--s);">10</div><div class="stat-lbl">Mau toi thieu</div></div>
+                <div><div class="stat-val" style="font-size:1.6rem;color:var(--blue);">5</div><div class="stat-lbl">CV Folds</div></div>
+            </div>
+            <div class="text-center mt-2" id="data-status-msg" style="font-size:0.75rem;"></div>
+        </div>
+        <div class="card glass">
+            <h2>Chon Thuat toan</h2>
+            <div class="algo-card sel" data-model="svm" onclick="selAlgo(this,'svm')">
+                <div class="algo-ic" style="background:var(--p-glow);color:var(--p);">SVM</div>
+                <div style="flex:1;"><div class="algo-nm">Support Vector Machine</div><div class="algo-sub">Tuyen tinh, nhanh, on dinh</div></div>
+                <span class="algo-badge" style="background:var(--p-glow);color:var(--p);">Khuyen dung</span>
+            </div>
+            <div class="algo-card" data-model="rf" onclick="selAlgo(this,'rf')">
+                <div class="algo-ic" style="background:var(--s-glow);color:var(--s);">RF</div>
+                <div style="flex:1;"><div class="algo-nm">Random Forest</div><div class="algo-sub">Nhieu cay, chong overfitting</div></div>
+            </div>
+            <div class="algo-card" data-model="mlp" onclick="selAlgo(this,'mlp')">
+                <div class="algo-ic" style="background:var(--a-glow);color:var(--a);">MLP</div>
+                <div style="flex:1;"><div class="algo-nm">Neural Network (MLP)</div><div class="algo-sub">Mang no-ron, hoc phi tuyen</div></div>
+            </div>
+            <div class="algo-card" data-model="knn" onclick="selAlgo(this,'knn')">
+                <div class="algo-ic" style="background:var(--blue-glow);color:var(--blue);">KNN</div>
+                <div style="flex:1;"><div class="algo-nm">K-Nearest Neighbors</div><div class="algo-sub">Khoang cach, don gian</div></div>
+            </div>
+            <select id="model-type" style="display:none;"><option value="svm" selected>SVM</option><option value="rf">RF</option><option value="mlp">MLP</option><option value="knn">KNN</option></select>
+            <div class="grid grid-2 mt-2">
+                <button id="train-btn" class="btn btn-primary w-full" disabled>Bat dau Huan luyen</button>
+                <a href="{{ url_for('collect') }}" class="btn btn-secondary w-full">Thu thap them</a>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="card glass" style="height:100%;display:flex;flex-direction:column;">
+            <h2>Trang thai</h2>
+            <div class="p-steps" id="progress-steps">
+                <div class="p-step" id="step-data"><div class="p-dot">1</div><div class="p-step-lbl">Tai du lieu</div></div>
+                <div class="p-step" id="step-train"><div class="p-dot">2</div><div class="p-step-lbl">Huan luyen</div></div>
+                <div class="p-step" id="step-eval"><div class="p-dot">3</div><div class="p-step-lbl">Danh gia</div></div>
+                <div class="p-step" id="step-done"><div class="p-dot">4</div><div class="p-step-lbl">Hoan tat</div></div>
+            </div>
+            <div id="status-idle" class="flex flex-col items-center justify-center" style="flex:1;text-align:center;">
+                <div style="width:56px;height:56px;border-radius:12px;background:var(--p-glow);display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
+                    <span style="font-size:1.3rem;color:var(--p);font-weight:900;">ML</span>
+                </div>
+                <p class="text-2">San sang huan luyen</p>
+                <p class="text-2" style="font-size:0.75rem;">Chon thuat toan va nhan bat dau</p>
+            </div>
+            <div id="status-training" class="flex flex-col items-center justify-center" style="display:none;flex:1;text-align:center;">
+                <div class="loader" style="margin-bottom:1rem;"></div>
+                <h3 class="text-p mb-1">Dang huan luyen...</h3>
+                <p class="text-2" id="training-log" style="font-size:0.8rem;">Khoi tao du lieu...</p>
+            </div>
+            <div id="status-result" style="display:none;flex:1;">
+                <div class="text-center mb-3">
+                    <div style="width:46px;height:46px;border-radius:50%;background:rgba(46,213,115,0.12);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                        <span style="color:var(--success);font-size:1.1rem;font-weight:900;">OK</span>
+                    </div>
+                    <h3 style="color:var(--success);">Hoan tat!</h3>
+                </div>
+                <div class="grid grid-2" style="gap:0.6rem;">
+                    <div class="res-box"><div class="stat-lbl">Accuracy</div><div class="stat-val" id="res-accuracy">0%</div></div>
+                    <div class="res-box"><div class="stat-lbl">Precision</div><div class="stat-val" id="res-precision">0%</div></div>
+                    <div class="res-box"><div class="stat-lbl">Recall</div><div class="stat-val" id="res-recall">0%</div></div>
+                    <div class="res-box"><div class="stat-lbl">F1-Score</div><div class="stat-val" id="res-f1">0%</div></div>
+                </div>
+                <div class="grid grid-2 mt-2">
+                    <a href="{{ url_for('recognize') }}" class="btn btn-primary w-full">Nhan dien ngay</a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary w-full">Xem Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function selAlgo(el,m){document.querySelectorAll('.algo-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('model-type').value=m;}
+</script>
+<script src="{{ url_for('static', filename='js/train.js') }}?v=2"></script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}VN Check - Thu thap{% endblock %}
+
+{% block extra_css %}
+.rec-dot { display:none; width:10px; height:10px; border-radius:50%; background:var(--danger); }
+.rec-dot.on { display:inline-block; animation:rec-blink 0.8s infinite; }
+@keyframes rec-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.mini-bar { height:4px; background:rgba(255,255,255,0.04); border-radius:2px; overflow:hidden; margin-top:0.4rem; }
+.mini-fill { height:100%; background:linear-gradient(90deg,var(--p),var(--s)); border-radius:2px; transition:width 0.3s; }
+.act-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
+.act-btn {
+    display:flex; align-items:center; gap:0.5rem; padding:0.75rem 0.85rem;
+    border-radius:var(--r); border:1px solid var(--border); background:rgba(0,0,0,0.15);
+    cursor:pointer; transition:all 0.3s; color:var(--text); font-size:0.8rem; font-weight:500;
+}
+.act-btn:hover { border-color:var(--border-h); background:rgba(255,107,107,0.04); transform:translateY(-1px); }
+.act-btn:disabled { opacity:0.3; pointer-events:none; }
+.act-btn .ic { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; flex-shrink:0; }
+.act-btn .ic.red { background:var(--p-glow); color:var(--p); }
+.act-btn .ic.yel { background:var(--s-glow); color:var(--s); }
+.act-btn .ic.grn { background:var(--a-glow); color:var(--a); }
+.act-btn .ic.blu { background:var(--blue-glow); color:var(--blue); }
+.act-info { display:flex; flex-direction:column; }
+.act-info span:last-child { font-size:0.65rem; color:var(--text-2); font-weight:400; }
+.speed-row { display:flex; align-items:center; gap:0.4rem; margin-top:0.6rem; padding:0.4rem 0.6rem; background:rgba(0,0,0,0.1); border-radius:8px; }
+.sp-btn { padding:0.25rem 0.5rem; border-radius:5px; border:1px solid var(--border); background:transparent; color:var(--text-2); font-size:0.7rem; cursor:pointer; transition:all 0.2s; }
+.sp-btn.active { border-color:var(--p); color:var(--p); background:var(--p-glow); }
+.sp-btn:hover { border-color:var(--p); color:var(--p); }
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-2">
+    <div>
+        <div class="card glass mb-2">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="mb-0">Camera</h2>
+                <div class="flex items-center gap-2">
+                    <span class="rec-dot" id="rec-indicator"></span>
+                    <span id="camera-status" class="text-2" style="font-size:0.75rem;">Khoi tao...</span>
+                </div>
+            </div>
+            <div class="vid-box">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="output_canvas"></canvas>
+                <div id="loading-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;">
+                    <div class="loader" style="margin-bottom:1rem;"></div>
+                    <p class="text-2" style="font-size:0.8rem;">Dang tai MediaPipe...</p>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-1">
+                <span class="text-2" style="font-size:0.7rem;">MediaPipe Hands · 42 Landmarks · 2 tay</span>
+                <button id="toggle-camera-btn" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.7rem;">Tat Camera</button>
+            </div>
+        </div>
+        <div class="card glass">
+            <h3 style="margin-bottom:0.4rem;">Huong dan</h3>
+            <ol style="padding-left:1.1rem;color:var(--text-2);font-size:0.8rem;line-height:2.2;">
+                <li>Dam bao <strong style="color:var(--text);">1 hoac 2 ban tay</strong> nam trong khung hinh</li>
+                <li>Chon nhan can thu thap o ben phai</li>
+                <li>Thuc hien ky hieu tay tuong ung</li>
+                <li>Nhan <strong style="color:var(--p);">Luu 1 Mau</strong> hoac bat <strong style="color:var(--s);">Tu dong Luu</strong></li>
+                <li>Thu thap it nhat <strong style="color:var(--p);">100 mau</strong> moi nhan</li>
+            </ol>
+        </div>
+    </div>
+
+    <div>
+        <div class="card glass">
+            <h2>Dieu khien Thu thap</h2>
+            <div class="form-group">
+                <label for="label-select">Chon nhan</label>
+                <select id="label-select"><option value="">-- Dang tai --</option></select>
+            </div>
+            <div class="flex justify-between items-center mb-2 p-3" style="background:rgba(0,0,0,0.2);border-radius:12px;border:1px solid var(--border);">
+                <div>
+                    <div class="text-2" style="font-size:0.75rem;">So mau da thu</div>
+                    <div id="current-label-count" class="stat-val" style="font-size:2rem;">0</div>
+                    <div class="mini-bar" style="width:120px;"><div class="mini-fill" id="sample-progress" style="width:0%;"></div></div>
+                    <div class="text-2" style="font-size:0.65rem;margin-top:0.15rem;" id="sample-target-text">0 / 100</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-2" style="font-size:0.75rem;">Trang thai</div>
+                    <div id="detection-status" style="color:var(--danger);font-weight:600;">Khong thay tay</div>
+                </div>
+            </div>
+            <div class="act-grid">
+                <button id="record-btn" class="act-btn" disabled>
+                    <div class="ic red">+1</div>
+                    <div class="act-info"><span>Luu 1 Mau</span><span>Luu frame hien tai</span></div>
+                </button>
+                <button id="auto-record-btn" class="act-btn" disabled>
+                    <div class="ic yel">A</div>
+                    <div class="act-info"><span>Tu dong Luu</span><span>Luu lien tuc</span></div>
+                </button>
+                <button id="record-5-btn" class="act-btn" disabled onclick="saveBurst(5)">
+                    <div class="ic grn">x5</div>
+                    <div class="act-info"><span>Luu 5 Mau</span><span>Burst nhanh</span></div>
+                </button>
+                <button id="delete-current-btn" class="act-btn" onclick="deleteCurrentLabel()">
+                    <div class="ic blu">X</div>
+                    <div class="act-info"><span>Xoa nhan nay</span><span>Xoa toan bo</span></div>
+                </button>
+            </div>
+            <div class="speed-row">
+                <span class="text-2" style="font-size:0.7rem;">Toc do:</span>
+                <button class="sp-btn" onclick="setAutoSpeed(1000)" data-speed="1000">1/s</button>
+                <button class="sp-btn active" onclick="setAutoSpeed(500)" data-speed="500">2/s</button>
+                <button class="sp-btn" onclick="setAutoSpeed(250)" data-speed="250">4/s</button>
+                <button class="sp-btn" onclick="setAutoSpeed(100)" data-speed="100">10/s</button>
+            </div>
+        </div>
+        <div class="card glass">
+            <div class="flex justify-between items-center mb-1">
+                <h3 class="mb-0">Tong quan Du lieu</h3>
+                <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.65rem;" onclick="loadDatasetStats()">Lam moi</button>
+            </div>
+            <div class="table-wrap" style="max-height:250px;overflow-y:auto;">
+                <table id="dataset-table">
+                    <thead><tr><th>Nhan</th><th>So luong</th><th style="width:60px;text-align:center;">Xoa</th></tr></thead>
+                    <tbody><tr><td colspan="3" class="text-center text-2">Dang tai...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/collect.js') }}?v=2"></script>
+<script>
+let autoSpeed=500;
+function setAutoSpeed(s){autoSpeed=s;document.querySelectorAll('.sp-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.sp-btn[data-speed="${s}"]`).classList.add('active');}
+function deleteCurrentLabel(){const s=document.getElementById('label-select');if(s.value&&window.deleteClass)window.deleteClass(s.value);}
+async function saveBurst(n){const b=document.getElementById('record-5-btn');if(b)b.disabled=true;for(let i=0;i<n;i++){const r=document.getElementById('record-btn');if(r&&!r.disabled)r.click();await new Promise(r=>setTimeout(r,150));}if(b)b.disabled=false;}
+</script>
+{% endblock %}

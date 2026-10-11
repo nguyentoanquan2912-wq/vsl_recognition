@@ -1,0 +1,20 @@
+{
+  "alphabet": [
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M",
+    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y"
+  ],
+  "words": [
+    "xin_chao", "cam_on", "xin_loi", "vang", "khong",
+    "giup_do", "tot", "yeu", "an", "uong"
+  ],
+  "display_names": {
+    "A": "A", "B": "B", "C": "C", "D": "D", "E": "E",
+    "F": "F", "G": "G", "H": "H", "I": "I", "K": "K",
+    "L": "L", "M": "M", "N": "N", "O": "O", "P": "P",
+    "Q": "Q", "R": "R", "S": "S", "T": "T", "U": "U",
+    "V": "V", "W": "W", "X": "X", "Y": "Y",
+    "xin_chao": "Xin chào", "cam_on": "Cảm ơn", "xin_loi": "Xin lỗi",
+    "vang": "Vâng", "khong": "Không", "giup_do": "Giúp đỡ",
+    "tot": "Tốt", "yeu": "Yêu", "an": "Ăn", "uong": "Uống"
+  }
+}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}VN Check - Dashboard{% endblock %}
+
+{% block extra_css %}
+.kpi { text-align:center; padding:1.1rem 0.5rem; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border); transition:all 0.3s; position:relative; overflow:hidden; }
+.kpi::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; }
+.kpi:nth-child(1)::after { background:var(--p); }
+.kpi:nth-child(2)::after { background:var(--s); }
+.kpi:nth-child(3)::after { background:var(--a); }
+.kpi:nth-child(4)::after { background:var(--blue); }
+.kpi:hover { transform:translateY(-3px); border-color:var(--border-h); }
+.kpi-val { font-family:var(--mono); font-size:1.8rem; font-weight:700; color:var(--p); margin:0.2rem 0; }
+.kpi-lbl { font-size:0.65rem; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; }
+.kpi-sub { font-size:0.6rem; color:var(--text-3); margin-top:0.15rem; }
+.dash-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; padding:0.6rem 0.85rem; background:rgba(0,0,0,0.15); border-radius:10px; border:1px solid var(--border); }
+.dash-bar h2 { margin:0; font-size:1.1rem; }
+.dash-bar .bar-r { display:flex; gap:0.4rem; }
+.m-badge { display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.6rem; border-radius:999px; font-size:0.7rem; font-weight:600; background:var(--p-glow); color:var(--p); border:1px solid rgba(255,107,107,0.12); }
+{% endblock %}
+
+{% block content %}
+<div id="no-metrics" style="display:none;">
+    <div class="flex flex-col items-center justify-center" style="padding:4rem 2rem;text-align:center;">
+        <div style="width:70px;height:70px;border-radius:14px;background:var(--p-glow);display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
+            <span style="font-size:1.6rem;color:var(--p);font-weight:900;">ML</span>
+        </div>
+        <h2>Chua co du lieu Mo hinh</h2>
+        <p class="text-2" style="max-width:380px;margin:0 auto 1.25rem;">Huan luyen mo hinh truoc de xem bao cao phan tich.</p>
+        <div class="flex gap-2">
+            <a href="{{ url_for('train_page') }}" class="btn btn-primary">Huan luyen</a>
+            <a href="{{ url_for('collect') }}" class="btn btn-secondary">Thu thap du lieu</a>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-content" style="display:none;">
+    <div class="dash-bar">
+        <div class="flex items-center gap-3"><h2>Dashboard</h2><span class="m-badge" id="model-badge">SVM</span></div>
+        <div class="bar-r">
+            <a href="{{ url_for('train_page') }}" class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem;">Train lai</a>
+            <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem;" onclick="location.reload()">Lam moi</button>
+        </div>
+    </div>
+
+    <div class="grid grid-4 mb-3">
+        <div class="kpi"><div class="kpi-lbl">Accuracy</div><div class="kpi-val" id="kpi-accuracy">0%</div><div class="kpi-sub">Ti le dung tong the</div></div>
+        <div class="kpi"><div class="kpi-lbl">Precision</div><div class="kpi-val" id="kpi-precision">0%</div><div class="kpi-sub">Ti le duong that</div></div>
+        <div class="kpi"><div class="kpi-lbl">Recall</div><div class="kpi-val" id="kpi-recall">0%</div><div class="kpi-sub">Ti le nhan dien dung</div></div>
+        <div class="kpi"><div class="kpi-lbl">F1-Score</div><div class="kpi-val" id="kpi-f1">0%</div><div class="kpi-sub">Trung binh hai hoa</div></div>
+    </div>
+
+    <div class="grid grid-2 mb-2">
+        <div class="card glass" style="margin-bottom:0;"><h3 class="mb-2">Do chinh xac theo Lop</h3><div class="chart-box"><canvas id="class-accuracy-chart"></canvas></div></div>
+        <div class="card glass" style="margin-bottom:0;"><h3 class="mb-2">Tong quan Metrics</h3><div class="chart-box"><canvas id="radar-chart"></canvas></div></div>
+    </div>
+    <div class="grid grid-2">
+        <div class="card glass"><h3 class="mb-2">Ma tran Nham lan</h3><div class="table-wrap" style="max-height:400px;overflow:auto;"><table id="confusion-matrix" style="text-align:center;"></table></div></div>
+        <div class="card glass"><h3 class="mb-2">Phan bo Du lieu</h3><div class="chart-box"><canvas id="distribution-chart"></canvas></div></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}?v=2"></script>
+{% endblock %}

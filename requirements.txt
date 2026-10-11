@@ -1,0 +1,13 @@
+flask
+flask-socketio
+eventlet
+opencv-python
+mediapipe
+numpy
+pandas
+scikit-learn
+joblib
+matplotlib
+seaborn
+gtts
+Pillow
